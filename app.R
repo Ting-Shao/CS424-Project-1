@@ -17,6 +17,7 @@ library(grid)
 library(leaflet)
 library(scales)
 library(usmap)
+library(stringr)
 
 #read csv and preprocess data
 
@@ -46,7 +47,7 @@ TEPI_total_energy$total <- TEPI_total_total$generation[match(TEPI_total_energy$Y
 c_es<-c("Coal"= "Coal",
         "Geothermal"= "Geothermal",
         "Hydro"= "Hydro",
-        "Natural Gas"= "NaturalGas",
+        "Natural Gas"= "Natural Gas",
         "Nuclear"= "Nuclear",
         "Petroleum"= "Petroleum",
         "Solar"= "Solar",
@@ -56,7 +57,7 @@ c_state<-setNames(state.abb, state.name)[state.name]
 c_state<-append(c_state, c("Washington DC"="DC"))
 c_state<-append(c("US-TOTAL"="US-TOTAL"),c_state)
 
-years<-c(2005:2020)
+years<-c(1990:2019)
 
 interesting_comparisons<-c("Default","A","B","C","D","E")
 
@@ -75,6 +76,7 @@ ui <- dashboardPage(
     dashboardHeader(title = "CS424 Spring 2021 Project1"),
     dashboardSidebar(disable = FALSE, collapsed = FALSE,
                      sidebarMenu(
+                         id="tabs",
                          menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard")),
                          menuItem("", tabName = "cheapBlankSpace", icon = NULL),
                          menuItem("", tabName = "cheapBlankSpace", icon = NULL),
@@ -88,6 +90,71 @@ ui <- dashboardPage(
                          menuItem("", tabName = "cheapBlankSpace", icon = NULL),
                          menuItem("", tabName = "cheapBlankSpace", icon = NULL),
                          menuItem("About page", tabName = "about", icon = icon("question"))
+                     ),
+                     hr(),
+                     conditionalPanel(condition ="input.tabs == 'com1'",
+                                      fluidRow(
+                                          column(1),
+                                          column(10,
+                                                 h4("Setting:"),
+                                                 h5("Energy Source1 : Coal "),
+                                                 h5("Year1 : 1990 "),
+                                                 h5("Energy Source2 : Coal "),
+                                                 h5("Year1 : 2019 ")
+                                          )
+                                      ),
+                                      fluidRow(
+                                          column(1),
+                                          "From the geographical comparison, we can see that the relationship between total coal production in each state has changed little over time, but the percentage difference has changed significantly. This shows that other energy sources have undergone significant changes at this time, and people's dependence on coal for energy is also declining.  "
+                                      )
+                     ),
+                     conditionalPanel(condition ="input.tabs == 'com2'",
+                                      fluidRow(
+                                          column(1),
+                                          column(10,
+                                                 h4("Setting:"),
+                                                 h5("Energy Source1 : Natural gas "),
+                                                 h5("Year1 : 1990 "),
+                                                 h5("Energy Source2 : Natural gas "),
+                                                 h5("Year1 : 2019 ")
+                                          )
+                                      ),
+                                      fluidRow(
+                                          column(1),
+                                          "Natural gas's share of energy in U.S. states is increasing day by day."
+                                      )
+                     ),
+                     conditionalPanel(condition ="input.tabs == 'com3'",
+                                      fluidRow(
+                                          column(1),
+                                          column(10,
+                                                 h4("Setting:"),
+                                                 h5("Energy Source1 : Solar "),
+                                                 h5("Year1 : 1990 "),
+                                                 h5("Energy Source2 : Wind "),
+                                                 h5("Year1 : 1990 ")
+                                          )
+                                      ),
+                                      fluidRow(
+                                          column(1),
+                                          "The West Coast of the United States is the forerunner of renewable energy development."
+                                      )
+                     ),
+                     conditionalPanel(condition ="input.tabs == 'com5'",
+                                      fluidRow(
+                                          column(1),
+                                          column(10,
+                                                 h4("Setting:"),
+                                                 h5("Energy Source1 : Coal "),
+                                                 h5("Year1 : 2019 "),
+                                                 h5("Energy Source2 : Natural gas "),
+                                                 h5("Year1 : 2019 ")
+                                          )
+                                      ),
+                                      fluidRow(
+                                          column(1),
+                                          "Comparison of the two most important energy sources in the United States: Coal V.S. Natural gas"
+                                      )
                      )
     ),
     
@@ -112,9 +179,11 @@ ui <- dashboardPage(
                                fluidRow(
                                    box(
                                        title = "Stacked bar chart", solidHeader = TRUE, status = "primary", width = 12, 
-                                       h3("The amount of each energy source"),
+                                       collapsible = TRUE,
+                                       
+                                       h5("The amount of each energy source"),
                                        plotOutput("sbc_es", height = 200),
-                                       h3("The percent of the total production for each energy source"),
+                                       h5("The percent of the total production for each energy source"),
                                        plotOutput("sbc_pes", height = 200)
                                    )  
                                ),
@@ -125,6 +194,7 @@ ui <- dashboardPage(
                                        solidHeader = TRUE, 
                                        status = "primary", 
                                        width = 12,
+                                       collapsible = TRUE,
                                        
                                        checkboxInput("All", "All", TRUE),
                                        checkboxGroupInput("variable", "Variables to show:",
@@ -140,9 +210,9 @@ ui <- dashboardPage(
                                                                        "Wood"),
                                                           inline = TRUE),
                                        
-                                       h3("The amount of each energy source"),
+                                       h5("The amount of each energy source"),
                                        plotOutput("ln_es", height = 200),
-                                       h3("The percent of the total production for each energy source"),
+                                       h5("The percent of the total production for each energy source"),
                                        plotOutput("ln_pes", height = 200)
                                    )
                                ),
@@ -150,20 +220,22 @@ ui <- dashboardPage(
                                fluidRow(
                                    box(title = "Table of raw numbers", solidHeader = TRUE, status = "primary", 
                                        width = 12, 
-                                       h3("The amount of each energy source"),
+                                       collapsible = TRUE,
+                                       h5("The amount of each energy source"),
                                        dataTableOutput("tr_es", height = 200),
                                        hr(),
                                        hr(),
                                        hr(),
                                        hr(),
                                        hr(),
-                                       h3("The percent of the total production for each energy source"),
+                                       h5("The percent of the total production for each energy source"),
                                        dataTableOutput("tr_pes", height = 200)
                                    )
                                ),
                                
                                fluidRow(
                                    box(title = "Geographic comparisons", solidHeader = TRUE, status = "primary", width = 12, 
+                                       collapsible = TRUE,
                                        "the percentage of that energy source",
                                        plotOutput("geo2", height = 200),
                                        "the total amount of that energy source",
@@ -183,9 +255,10 @@ ui <- dashboardPage(
                                fluidRow(
                                    box(
                                        title = "Stacked bar chart", solidHeader = TRUE, status = "primary", width = 12, 
-                                       h3("The amount of each energy source"),
+                                       collapsible = TRUE,
+                                       h5("The amount of each energy source"),
                                        plotOutput("sbc_es2", height = 200),
-                                       h3("The percent of the total production for each energy source"),
+                                       h5("The percent of the total production for each energy source"),
                                        plotOutput("sbc_pes2", height = 200)
                                    )  
                                ),
@@ -196,6 +269,7 @@ ui <- dashboardPage(
                                        solidHeader = TRUE, 
                                        status = "primary", 
                                        width = 12,
+                                       collapsible = TRUE,
                                        
                                        checkboxInput("All2", "All", TRUE),
                                        checkboxGroupInput("variable2", "Variables to show:",
@@ -211,9 +285,9 @@ ui <- dashboardPage(
                                                                        "Wood"),
                                                           inline = TRUE),
                                        
-                                       h3("The amount of each energy source"),
+                                       h5("The amount of each energy source"),
                                        plotOutput("ln_es2", height = 200),
-                                       h3("The percent of the total production for each energy source"),
+                                       h5("The percent of the total production for each energy source"),
                                        plotOutput("ln_pes2", height = 200)
                                    )
                                ),
@@ -221,20 +295,22 @@ ui <- dashboardPage(
                                fluidRow(
                                    box(title = "Table of raw numbers", solidHeader = TRUE, status = "primary", 
                                        width = 12, 
-                                       h3("The amount of each energy source"),
+                                       collapsible = TRUE,
+                                       h5("The amount of each energy source"),
                                        dataTableOutput("tr_es2", height = 200),
                                        hr(),
                                        hr(),
                                        hr(),
                                        hr(),
                                        hr(),
-                                       h3("The percent of the total production for each energy source"),
+                                       h5("The percent of the total production for each energy source"),
                                        dataTableOutput("tr_pes2", height = 200)
                                    )
                                ),
                                
                                fluidRow(
                                    box(title = "Geographic comparisons", solidHeader = TRUE, status = "primary", width = 12, 
+                                       collapsible = TRUE,
                                        "the percentage of that energy source",
                                        plotOutput("geo4", height = 200),
                                        "the total amount of that energy source",
@@ -247,25 +323,7 @@ ui <- dashboardPage(
                                )
                     )
             ),
-            tabItem(tabName = "com2",
-                    box( width = NULL, status = "primary", solidHeader = TRUE, title= "Reactive Log Visualizer",
-                         helpText("Graphical representation of the reactive expressions called in the app. It is a minimal example with only the color and horizon setting as adjustable value. To build the graphic please use the mouse and drag the blue bar to the right."),
-                         tags$iframe(src = './reactlog_mini.html', 
-                                     width = '100%', height = '800px',
-                                     frameborder = 0, scrolling = 'auto'
-                         )
-                    )
-                    
-            ),
-            tabItem(tabName = "com3",
-                    fluidPage(
-                        tags$iframe(src = './about.html', 
-                                    width = '100%', height = '800px',
-                                    frameborder = 0, scrolling = 'auto'
-                        )
-                    )
-                    
-            ),
+            
             tabItem(tabName = "about",
                     box( width = NULL, status = "primary", solidHeader = TRUE, title= "About page",
                          #helpText("Graphical representation of the reactive expressions called in the app. It is a minimal example with only the color and horizon setting as adjustable value. To build the graphic please use the mouse and drag the blue bar to the right."),
@@ -388,7 +446,7 @@ server <- function(input, output, session) {
             
             for (i in 3:11)
             {
-                p[,i]<-format(round(p[,i]/p$total, 3), nsmall = 3)
+                p[,i]<-format(round(p[,i]/p$total, 5), nsmall = 5)
             } 
             p$total <- NULL
             
@@ -452,7 +510,7 @@ server <- function(input, output, session) {
             
             for (i in 3:11)
             {
-                p[,i]<-format(round(p[,i]/p$total, 3), nsmall = 3)
+                p[,i]<-format(round(p[,i]/p$total, 5), nsmall = 5)
             } 
             p$total <- NULL
             
@@ -524,7 +582,6 @@ server <- function(input, output, session) {
     
     observe({
         # TRUE if input$controller is odd, FALSE if even.
-        print(length(input$variable))
         if(length(input$variable)<9){
             updateCheckboxInput(session, "All", "All", FALSE)
         }
@@ -560,7 +617,7 @@ server <- function(input, output, session) {
         TEPI_state_total <- subset(TEPI_state, ENERGY.SOURCE=="Total")
         TEPI_state_energy$total <- TEPI_state_total$generation[match(TEPI_state_energy$YEAR, TEPI_state_total$YEAR)]
         
-        #print(input$variable)
+        
         ss<-subset(TEPI_state_energy, ENERGY.SOURCE %in% input$variable)
         ggplot(ss, aes(x = YEAR, y = generation/total, group = ENERGY.SOURCE)) + geom_line(aes(color = ENERGY.SOURCE)) + scale_color_manual(values=color_fill)
     })
@@ -583,7 +640,7 @@ server <- function(input, output, session) {
         TEPI_state_total <- subset(TEPI_state, ENERGY.SOURCE=="Total")
         TEPI_state_energy$total <- TEPI_state_total$generation[match(TEPI_state_energy$YEAR, TEPI_state_total$YEAR)]
         
-        #print(input$variable)
+        
         ss<-subset(TEPI_state_energy, ENERGY.SOURCE %in% input$variable2)
         ggplot(ss, aes(x = YEAR, y = generation/total, group = ENERGY.SOURCE)) + geom_line(aes(color = ENERGY.SOURCE)) + scale_color_manual(values=color_fill)
     })
@@ -592,11 +649,13 @@ server <- function(input, output, session) {
     
 #    Geographic comparisons
     output$geo1 <- renderPlot({
+        print("1111")
         TEPI_state_energy <- subset(TEPI, ENERGY.SOURCE==input$es1)
         TEPI_state_energy_year <- subset(TEPI_state_energy, YEAR==input$year1)
         
         names(TEPI_state_energy_year )[names(TEPI_state_energy_year ) == 'STATE'] <- 'state'
         
+        print("2222")
         
         plot_usmap(data = TEPI_state_energy_year, values = "generation", color = "blue") + 
             scale_fill_continuous(low = "white", high = "blue", name = input$es1, label = scales::comma) + 
@@ -614,15 +673,12 @@ server <- function(input, output, session) {
         names(data )[names(data) == 'STATE'] <- 'state'
         
         
-        ##!
         names(data )[names(data) == input$es1] <- "generation"
         
         
         data$percentage<-(data$generation/data$Total)*100
         
         
-        print(data)
-        print(str(data))
         
         plot_usmap(data = data, values = "percentage", color = "blue") + 
             scale_fill_continuous(low = "white", high = "blue", name = input$es1, label = scales::comma) + 
@@ -656,13 +712,9 @@ server <- function(input, output, session) {
         
         ##!
         names(data )[names(data) == input$es2] <- "generation"
-        
-        
         data$percentage<-(data$generation/data$Total)*100
         
         
-        print(data)
-        print(str(data))
         
         plot_usmap(data = data, values = "percentage", color = "blue") + 
             scale_fill_continuous(low = "white", high = "blue", name = input$es2, label = scales::comma) + 
@@ -670,7 +722,55 @@ server <- function(input, output, session) {
             theme(legend.position = "right")
     })
     
-    
+# 5 interesting comparisons
+    observe({
+        print(input$tabs)
+        if (input$tabs=="com1"){
+            updateSelectInput(session, 'es1', label = 'Energy Source1', choices = c_es,
+                              selected = "Coal")
+            updateSelectInput(session, "year1", label = "Year1", choices = years,
+                              selected = 1990)
+            updateSelectInput(session, 'es2', label = 'Energy Source1', choices = c_es,
+                              selected = "Coal")
+            updateSelectInput(session, "year2", label = "Year1", choices = years,
+                              selected = 2019)
+        }
+        if (input$tabs=="com2"){
+            updateSelectInput(session, 'es1', label = 'Energy Source1', choices = c_es,
+                              selected = "Natural Gas")
+            updateSelectInput(session, "year1", label = "Year1", choices = years,
+                              selected = 1990)
+            updateSelectInput(session, 'es2', label = 'Energy Source1', choices = c_es,
+                              selected = "Natural Gas")
+            updateSelectInput(session, "year2", label = "Year1", choices = years,
+                              selected = 2019)
+        }
+        if (input$tabs=="com3"){
+            updateSelectInput(session, 'es1', label = 'Energy Source1', choices = c_es,
+                              selected = "Solar")
+            updateSelectInput(session, "year1", label = "Year1", choices = years,
+                              selected = 1990)
+            updateSelectInput(session, 'es2', label = 'Energy Source1', choices = c_es,
+                              selected = "Wind")
+            updateSelectInput(session, "year2", label = "Year1", choices = years,
+                              selected = 1990)
+            
+        }
+        if (input$tabs=="com4"){
+            
+        }
+        if (input$tabs=="com5"){
+            updateSelectInput(session, 'es1', label = 'Energy Source1', choices = c_es,
+                              selected = "Coal")
+            updateSelectInput(session, "year1", label = "Year1", choices = years,
+                              selected = 2019)
+            updateSelectInput(session, 'es2', label = 'Energy Source1', choices = c_es,
+                              selected = "Natural Gas")
+            updateSelectInput(session, "year2", label = "Year1", choices = years,
+                              selected = 1990)
+            
+        }
+    })
     
     
     
