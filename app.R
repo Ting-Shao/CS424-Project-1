@@ -373,25 +373,60 @@ server <- function(input, output, session) {
 
 #    Stacked bar chart (dependent to state)
     output$sbc_es <- renderPlot({
-        
-        ggplot(TEPI_state1Reactive(), aes(fill=ENERGY.SOURCE, y=generation, x=YEAR)) + geom_bar(position="stack", stat="identity")+scale_fill_manual("legend", values = color_fill)+
+        if(input$es1!="Total"){
+            print(input$es1)
+            ggplot(subset(TEPI_state1Reactive(),ENERGY.SOURCE==input$es1), aes(fill=ENERGY.SOURCE, y=generation, x=YEAR)) + geom_bar(position="stack", stat="identity")+scale_fill_manual("legend", values = color_fill)+
+                theme_minimal()
+        }
+        else{
+            ggplot(TEPI_state1Reactive(), aes(fill=ENERGY.SOURCE, y=generation, x=YEAR)) + geom_bar(position="stack", stat="identity")+scale_fill_manual("legend", values = color_fill)+
             theme_minimal()
+            }
     })
     
     output$sbc_pes <- renderPlot({
-        ggplot(TEPI_state1Reactive(), aes(fill=ENERGY.SOURCE, y=generation, x=YEAR)) + geom_bar(position="fill", stat="identity")+scale_fill_manual("legend", values = color_fill)+
+        if(input$es1!="Total"){
+            TEPI_state <- TEPI_state1()
+            TEPI_state_total <- subset(TEPI_state, ENERGY.SOURCE=="Total")
+            TEPI_state <- subset(TEPI_state, ENERGY.SOURCE==input$es1)
+            TEPI_state$total <- TEPI_state_total$generation[match(TEPI_state$YEAR, TEPI_state_total$YEAR)]
+            TEPI_state$percentage <-TEPI_state$generation/TEPI_state$total
+            ggplot(TEPI_state, aes(fill=ENERGY.SOURCE, y=percentage, x=YEAR)) + geom_bar(position="stack", stat="identity")+scale_fill_manual("legend", values = color_fill)+
+                theme_minimal()
+            
+        }
+        else{
+            ggplot(TEPI_state1Reactive(), aes(fill=ENERGY.SOURCE, y=generation, x=YEAR)) + geom_bar(position="fill", stat="identity")+scale_fill_manual("legend", values = color_fill)+
             theme_minimal()
+            }
     })
     
     output$sbc_es2 <- renderPlot({
-        
-        ggplot(TEPI_state2Reactive(), aes(fill=ENERGY.SOURCE, y=generation, x=YEAR)) + geom_bar(position="stack", stat="identity")+scale_fill_manual("legend", values = color_fill)+
-            theme_minimal()
+        if(input$es2!="Total"){
+            ggplot(subset(TEPI_state2Reactive(),ENERGY.SOURCE==input$es2), aes(fill=ENERGY.SOURCE, y=generation, x=YEAR)) + geom_bar(position="stack", stat="identity")+scale_fill_manual("legend", values = color_fill)+
+                theme_minimal()
+        }
+        else{
+            ggplot(TEPI_state2Reactive(), aes(fill=ENERGY.SOURCE, y=generation, x=YEAR)) + geom_bar(position="stack", stat="identity")+scale_fill_manual("legend", values = color_fill)+
+                theme_minimal()
+        }
     })
     
     output$sbc_pes2 <- renderPlot({
+        if(input$es2!="Total"){
+            TEPI_state <- TEPI_state2()
+            TEPI_state_total <- subset(TEPI_state, ENERGY.SOURCE=="Total")
+            TEPI_state <- subset(TEPI_state, ENERGY.SOURCE==input$es2)
+            TEPI_state$total <- TEPI_state_total$generation[match(TEPI_state$YEAR, TEPI_state_total$YEAR)]
+            TEPI_state$percentage <-TEPI_state$generation/TEPI_state$total
+            ggplot(TEPI_state, aes(fill=ENERGY.SOURCE, y=percentage, x=YEAR)) + geom_bar(position="stack", stat="identity")+scale_fill_manual("legend", values = color_fill)+
+                theme_minimal()
+            
+        }
+        else{
         ggplot(TEPI_state2Reactive(), aes(fill=ENERGY.SOURCE, y=generation, x=YEAR)) + geom_bar(position="fill", stat="identity")+scale_fill_manual("legend", values = color_fill)+
             theme_minimal()
+        }
     })
     
 #    Table of raw numbers (dependent to state)
@@ -651,13 +686,13 @@ server <- function(input, output, session) {
     
 #    Geographic comparisons
     output$geo1 <- renderPlot({
-        print("1111")
+       
         TEPI_state_energy <- subset(TEPI, ENERGY.SOURCE==input$es1)
         TEPI_state_energy_year <- subset(TEPI_state_energy, YEAR==input$year1)
         
         names(TEPI_state_energy_year )[names(TEPI_state_energy_year ) == 'STATE'] <- 'state'
         
-        print("2222")
+       
         
         plot_usmap(data = TEPI_state_energy_year, values = "generation", color = "blue") + 
             scale_fill_continuous(low = "white", high = "blue", name = input$es1, label = scales::comma) + 
@@ -711,7 +746,6 @@ server <- function(input, output, session) {
     })
     
     output$geo4 <- renderPlot({
-        print(input$es2)
         
         data <- subset(TEPI, (ENERGY.SOURCE==input$es2|ENERGY.SOURCE=="Total")&YEAR==input$year2)
         
@@ -722,7 +756,7 @@ server <- function(input, output, session) {
         
         
         names(data )[names(data) == 'STATE'] <- 'state'
-        print(data)
+       
         ##!
         if (input$es2=="Total")
         {
@@ -745,7 +779,6 @@ server <- function(input, output, session) {
     
 # 5 interesting comparisons
     observe({
-        print(input$tabs)
         if (input$tabs=="com1"){
             updateSelectInput(session, 'es1', label = 'Energy Source1', choices = c_es,
                               selected = "Coal")
