@@ -44,7 +44,8 @@ TEPI_total_energy <- subset(TEPI_total, ENERGY.SOURCE!="Total")
 TEPI_total_total <- subset(TEPI_total, ENERGY.SOURCE=="Total")
 TEPI_total_energy$total <- TEPI_total_total$generation[match(TEPI_total_energy$YEAR, TEPI_total_total$YEAR)]
 
-c_es<-c("Coal"= "Coal",
+c_es<-c("Total"="Total",
+        "Coal"= "Coal",
         "Geothermal"= "Geothermal",
         "Hydro"= "Hydro",
         "Natural Gas"= "Natural Gas",
@@ -52,7 +53,8 @@ c_es<-c("Coal"= "Coal",
         "Petroleum"= "Petroleum",
         "Solar"= "Solar",
         "Wind"= "Wind",
-        "Wood"= "Wood")
+        "Wood"= "Wood"
+        )
 c_state<-setNames(state.abb, state.name)[state.name]
 c_state<-append(c_state, c("Washington DC"="DC"))
 c_state<-append(c("US-TOTAL"="US-TOTAL"),c_state)
@@ -157,7 +159,7 @@ ui <- dashboardPage(
                                       )
                      )
     ),
-    
+#==========    ==========    ==========    dashboard    ==========    ==========    ==========    
     dashboardBody(
         tabItems(
             tabItem(tabName = "dashboard",
@@ -673,10 +675,18 @@ server <- function(input, output, session) {
         names(data )[names(data) == 'STATE'] <- 'state'
         
         
-        names(data )[names(data) == input$es1] <- "generation"
         
         
-        data$percentage<-(data$generation/data$Total)*100
+        
+        if (input$es1=="Total")
+        {
+            data$percentage<-1
+        }
+        else
+        {
+            names(data )[names(data) == input$es1] <- "generation"
+            data$percentage<-(data$generation/data$Total)*100
+        }
         
         
         
@@ -701,18 +711,29 @@ server <- function(input, output, session) {
     })
     
     output$geo4 <- renderPlot({
+        print(input$es2)
+        
         data <- subset(TEPI, (ENERGY.SOURCE==input$es2|ENERGY.SOURCE=="Total")&YEAR==input$year2)
         
         
         data <- subset(data,STATE!="US-TOTAL")
         data <- reshape(data, timevar = "ENERGY.SOURCE", idvar = c("YEAR","STATE","TYPE.OF.PRODUCER"), direction = "wide")
         colnames(data)<-gsub("generation.","",colnames(data))
+        
+        
         names(data )[names(data) == 'STATE'] <- 'state'
-        
-        
+        print(data)
         ##!
-        names(data )[names(data) == input$es2] <- "generation"
-        data$percentage<-(data$generation/data$Total)*100
+        if (input$es2=="Total")
+        {
+            data$percentage<-1
+        }
+        else
+        {
+            names(data )[names(data) == input$es2] <- "generation"
+            data$percentage<-(data$generation/data$Total)*100
+        }
+        
         
         
         
